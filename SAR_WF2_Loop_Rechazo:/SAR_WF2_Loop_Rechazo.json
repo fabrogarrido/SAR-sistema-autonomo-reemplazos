@@ -1,0 +1,863 @@
+{
+  "name": "SAR - Loop de rechazo",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sar-rechazo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "886430a0-1955-4ab5-9f3d-1659fc032c6a",
+      "name": "Webhook",
+      "webhookId": "4746ee20-c172-4195-8cc2-39f2ba8491de"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawBody = $('Webhook').first().json.body;\n\n// Maneja tanto clave vacía como body directo\nlet body;\ntry {\n  body = JSON.parse(rawBody['']);\n} catch(e) {\n  body = rawBody;\n}\n\n// Índice guardado en el Sheet\nconst indiceActual = $input.first().json.VALOR;\nconst rowNumber = $input.first().json.row_number;\n\nconst candidatos = body.candidatos;\nconst siguienteIndice = parseInt(indiceActual) + 1;\nconst guardiasPendientes = body.guardiasPendientes || [body.fecha];\n\nreturn [{\n  json: {\n    fecha: guardiasPendientes[0],\n    diaGuardia: body.diaGuardia,\n    solicitante: body.solicitante,\n    motivo: body.motivo,\n    totalGuardias: guardiasPendientes.length,\n    candidatos: candidatos,\n    indiceCandidato: siguienteIndice,\n    rowNumber: rowNumber,\n    sinCandidatos: siguienteIndice >= candidatos.length,\n    guardiasPendientes: guardiasPendientes\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "3bc5feb7-8cb9-4533-b97b-80b6f4de5f8d",
+      "name": "Siguiente Candidato"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://TU-N8N-DOMINIO.com/webhook/sar-rechazo",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "value": "={\n  \"fecha\": \"{{ $('Siguiente Candidato').first().json.fecha }}\",\n  \"fechaOriginal\": \"{{ $('Siguiente Candidato').first().json.fechaOriginal }}\",\n  \"diaGuardia\": \"{{ $('Siguiente Candidato').first().json.diaGuardia }}\",\n  \"solicitante\": \"{{ $('Siguiente Candidato').first().json.solicitante }}\",\n  \"motivo\": \"{{ $('Siguiente Candidato').first().json.motivo }}\",\n  \"totalGuardias\": {{ $('Siguiente Candidato').first().json.totalGuardias }},\n  \"indiceCandidato\": {{ $('Siguiente Candidato').first().json.indiceCandidato }},\n  \"candidatos\": {{ $('Siguiente Candidato').first().json.candidatos.toJsonString() }}\n}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1600,
+        96
+      ],
+      "id": "154d1843-5d50-4ce2-8da4-001d5f764bc1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30",
+          "mode": "list",
+          "cachedResultName": "SAR - Gestión de Guardias",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 658459483,
+          "mode": "list",
+          "cachedResultName": "Estado",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30/edit#gid=658459483"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ef0bfe3e-4e59-43ed-bd93-8a68c425dc70",
+      "name": "Leer Indice",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2QbdOt7ZPQPvWUtm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30",
+          "mode": "list",
+          "cachedResultName": "SAR - Gestión de Guardias",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 658459483,
+          "mode": "list",
+          "cachedResultName": "Estado",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30/edit#gid=658459483"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CLAVE": "indiceCandidato",
+            "VALOR": "={{ $json.indiceCandidato }}"
+          },
+          "matchingColumns": [
+            "CLAVE"
+          ],
+          "schema": [
+            {
+              "id": "CLAVE",
+              "displayName": "CLAVE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR",
+              "displayName": "VALOR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        0
+      ],
+      "id": "139aea3d-0281-468d-b3c6-360f7e9155f6",
+      "name": "Guardar Indice",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2QbdOt7ZPQPvWUtm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30",
+          "mode": "list",
+          "cachedResultName": "SAR - Gestión de Guardias",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 563825573,
+          "mode": "list",
+          "cachedResultName": "Reemplazos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30/edit#gid=563825573"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "FECHA": "={{ $json.fecha }}",
+            "DIA": "={{ $json.diaGuardia }}",
+            "CUBIERTO POR": "={{ $json.nombreCandidato }}",
+            "SOLICITANTE": "={{ $json.solicitante }}",
+            "MOTIVO": "={{ $json.motivo }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DIA",
+              "displayName": "DIA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CUBIERTO POR",
+              "displayName": "CUBIERTO POR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SOLICITANTE",
+              "displayName": "SOLICITANTE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "MOTIVO",
+              "displayName": "MOTIVO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2880,
+        -144
+      ],
+      "id": "0b3afaf0-89bc-410e-8f51-1661022657c4",
+      "name": "Registrar Reemplazo 2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2QbdOt7ZPQPvWUtm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "tu-email@gmail.com",
+        "subject": "=⚠️ SAR — Sin cobertura para guardia del {{ $json.fecha }}",
+        "emailType": "text",
+        "message": "=Estimados,\n\nEl Sistema Autónomo de Reemplazos (SAR) informa que no fue posible encontrar cobertura para la siguiente guardia de psicología:\n\n📅 Fecha: {{ $json.fecha }}\n📆 Día: {{ $json.diaGuardia }}\n👤 Profesional ausente: {{ $json.solicitante }}\n📋 Motivo: {{ $json.motivo }}\n\nEl sistema contactó a todos los profesionales disponibles para ese día y ninguno pudo cubrir la guardia. Se requiere coordinación manual para resolver la cobertura.\n\n——\nEste mensaje fue enviado automáticamente por el SAR\nServicio de Salud Mental — HIGA Eva Perón de San Martín",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        304
+      ],
+      "id": "e162a71c-5322-4614-82fe-e1eca561d728",
+      "name": "Notificar Rechazo Jefatura/Secretaria",
+      "webhookId": "647c8aad-14f9-4f50-a5f7-34ab640fd665",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "BXsLW2ReWOLuKJkP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Siguiente Candidato').first().json.candidatos[$('Siguiente Candidato').first().json.indiceCandidato][\"ID TELEGRAM\"] }}",
+        "message": "=👋 Hola {{ $('Siguiente Candidato').first().json.candidatos[$('Siguiente Candidato').first().json.indiceCandidato].NOMBRE }}!\n\n🏥 El servicio de Salud Mental necesita cobertura para {{ $('Siguiente Candidato').first().json.totalGuardias }} guardia(s) del día {{ $('Siguiente Candidato').first().json.diaGuardia }}.\n\n📋 Por favor seleccioná las fechas que podés cubrir y confirmá tu respuesta.",
+        "responseType": "customForm",
+        "defineForm": "json",
+        "jsonOutput": "=[\n  {\n    \"fieldLabel\": \"¿Qué fechas podés cubrir?\",\n    \"fieldType\": \"checkbox\",\n    \"fieldOptions\": {\n      \"values\": {{ $('Siguiente Candidato').first().json.guardiasPendientes.map(f => ({ option: f })) }}\n    },\n    \"requiredField\": true\n  },\n  {\n    \"fieldLabel\": \"¿Podés cubrir alguna?\",\n    \"fieldType\": \"radio\",\n    \"fieldOptions\": {\n      \"values\": [\n        { \"option\": \"Sí, las seleccionadas arriba\" },\n        { \"option\": \"No puedo cubrir ninguna\" }\n      ]\n    },\n    \"requiredField\": true\n  }\n]",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "21d59b3a-071a-4186-9d14-e37e24cc03a9",
+      "name": "Preguntar y esperar 2",
+      "webhookId": "f0118b20-af5c-4ef4-943d-f3da303f1b15",
+      "credentials": {
+        "telegramApi": {
+          "id": "x4w5jFHgm3aX2t7o",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "253a692b-8d1d-4595-a063-72e515f4a87f",
+              "leftValue": "={{ $json.sinCandidatos }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        160
+      ],
+      "id": "6f5c0fa7-be26-4a66-958b-f9d03f87cd26",
+      "name": "If 1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bc38863d-edd0-43a1-9711-99a63af9fce6",
+              "leftValue": "={{ $json.puedeCubrir }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "f25ee809-7438-4145-a4ef-d8a35833454e",
+      "name": "If 2"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.candidatos[$json.indiceCandidato][\"ID TELEGRAM\"] }}",
+        "text": "=✅ Confirmado. Quedaste registrado/a como reemplazo para las siguientes guardias:\n\n📅 {{ $json.fechasAceptadas.join('\\n📅 ') }}\n📆 Día: {{ $json.diaGuardia }}\n\nMuchas gracias por tu disponibilidad.\n\n——\nSAR — HIGA Eva Perón",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1696,
+        -144
+      ],
+      "id": "38c2a634-f34f-4103-a011-2ce940289079",
+      "name": "Reemplazo Registrado 2",
+      "webhookId": "cd87f3d3-4ca9-41c7-9cdc-d36d3c1f0a15",
+      "credentials": {
+        "telegramApi": {
+          "id": "x4w5jFHgm3aX2t7o",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30",
+          "mode": "list",
+          "cachedResultName": "SAR - Gestión de Guardias",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Profesionales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Juc4ZbUW9ogpmBDM_a0WOxee_wYtU3TikUsc8nyiW30/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "=NOMBRE",
+              "lookupValue": "={{ $('Procesar Respuesta 2').first().json.solicitante }}"
+            }
+          ]
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange",
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1952,
+        -144
+      ],
+      "id": "4b391401-f677-4737-9c89-c6de682e15a8",
+      "name": "Buscar Solicitante 2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2QbdOt7ZPQPvWUtm",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json[\"ID TELEGRAM\"] }}",
+        "text": "=✅ Tus guardias del {{ $('Procesar Respuesta 2').first().json.diaGuardia }} quedaron cubiertas por {{ $('Procesar Respuesta 2').first().json.nombreCandidato }}:\n\n📅 {{ $('Procesar Respuesta 2').first().json.fechasAceptadas.join('\\n📅 ') }}\n\n{{ $('Procesar Respuesta 2').first().json.fechasRestantes.length > 0 ? '⏳ Aún quedan pendientes:\\n📅 ' + $('Procesar Respuesta 2').first().json.fechasRestantes.join('\\n📅 ') : '🎉 ¡Todas tus guardias quedaron cubiertas!' }}\n\n——\nSAR — HIGA Eva Perón",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2176,
+        -144
+      ],
+      "id": "c09acf81-006e-4859-8449-1e5d9bb49cfc",
+      "name": "Ya estas cubierto 2",
+      "webhookId": "81908777-6049-42bf-b6a0-a1d7db4e40b4",
+      "credentials": {
+        "telegramApi": {
+          "id": "x4w5jFHgm3aX2t7o",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "tu-email@gmail.com",
+        "subject": "=✅ SAR — Guardias cubiertas del {{ $('Procesar Respuesta 2').first().json.diaGuardia }}",
+        "emailType": "text",
+        "message": "=Estimados,\n\nEl Sistema SAR informa que las siguientes guardias quedaron cubiertas:\n\n📅 Fechas: {{ $('Procesar Respuesta 2').first().json.fechasAceptadas.join(', ') }}\n📆 Día: {{ $('Procesar Respuesta 2').first().json.diaGuardia }}\n👤 Profesional ausente: {{ $('Procesar Respuesta 2').first().json.solicitante }}\n✅ Cubierta por: {{ $('Procesar Respuesta 2').first().json.nombreCandidato }}\n📋 Motivo: {{ $('Procesar Respuesta 2').first().json.motivo }}\n⏳ Fechas aún pendientes: {{ $('Procesar Respuesta 2').first().json.fechasRestantes.join(', ') }}\n\n——\nEste mensaje fue enviado automáticamente por el SAR\nServicio de Salud Mental — HIGA Eva Perón de San Martín",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2416,
+        -144
+      ],
+      "id": "9d53450d-b25f-4dbd-89d0-ac1f4d620248",
+      "name": "Notificar Jefatura/Secretaria 2",
+      "webhookId": "b5fea4e1-fac4-471a-9f54-0a141ca9127b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "BXsLW2ReWOLuKJkP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const respuesta = $input.first().json.data;\nconst contexto = $('Siguiente Candidato').first().json;\n\nconst fechasAceptadas = respuesta['¿Qué fechas podés cubrir?'] || [];\nconst puedeCubrir = respuesta['¿Podés cubrir alguna?'] === 'Sí, las seleccionadas arriba';\n\nconst fechasRestantes = contexto.guardiasPendientes.filter(f => !fechasAceptadas.includes(f));\n\nreturn [{\n  json: {\n    puedeCubrir: puedeCubrir,\n    fechasAceptadas: fechasAceptadas,\n    fechasRestantes: fechasRestantes,\n    solicitante: contexto.solicitante,\n    motivo: contexto.motivo,\n    diaGuardia: contexto.diaGuardia,\n    totalGuardias: contexto.totalGuardias,\n    candidatos: contexto.candidatos,\n    indiceCandidato: contexto.indiceCandidato,\n    nombreCandidato: contexto.candidatos[contexto.indiceCandidato].NOMBRE\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "d9d671ae-679a-44a9-b77b-e65aa7065f92",
+      "name": "Procesar Respuesta 2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1eb2bacb-b022-43fd-87a7-6597393fec2e",
+              "leftValue": "={{ $('Procesar Respuesta 2').first().json.fechasRestantes.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2896,
+        96
+      ],
+      "id": "9b53aa4b-b026-4e51-b993-a060d43113b1",
+      "name": "¿Quedan Fechas? 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Procesar Respuesta 2').first().json;\n\nreturn data.fechasAceptadas.map(fecha => ({\n  json: {\n    fecha: fecha,\n    diaGuardia: data.diaGuardia,\n    nombreCandidato: data.nombreCandidato,\n    solicitante: data.solicitante,\n    motivo: data.motivo,\n    fechasRestantes: data.fechasRestantes,\n    candidatos: data.candidatos\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2656,
+        -144
+      ],
+      "id": "1f95b74a-d37d-4e8b-a1c1-6e7e26a3c5a6",
+      "name": "Expandir Fechas Aceptadas 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Procesar Respuesta 2').first().json;\nconst fechasRestantes = data.fechasRestantes;\n\nreturn [{\n  json: {\n    fecha: fechasRestantes[0],\n    diaGuardia: data.diaGuardia,\n    solicitante: data.solicitante,\n    motivo: data.motivo,\n    totalGuardias: fechasRestantes.length,\n    indiceCandidato: 0,\n    candidatos: data.candidatos,\n    guardiasPendientes: fechasRestantes\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3200,
+        -48
+      ],
+      "id": "e8e6143b-80c8-46a1-b99e-ec3d0f95cd30",
+      "name": "Preparar Escalado 2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3424,
+        176
+      ],
+      "id": "e2dbb209-6fa3-43d7-9c79-d791d6df65d8",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://TU-N8N-DOMINIO.com/webhook/sar-rechazo",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fecha\": \"{{ $json.fecha }}\",\n  \"diaGuardia\": \"{{ $json.diaGuardia }}\",\n  \"solicitante\": \"{{ $json.solicitante }}\",\n  \"motivo\": \"{{ $json.motivo }}\",\n  \"totalGuardias\": {{ $json.totalGuardias }},\n  \"indiceCandidato\": 0,\n  \"candidatos\": {{ $json.candidatos.toJsonString() }},\n  \"guardiasPendientes\": {{ $json.guardiasPendientes.toJsonString() }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3424,
+        -48
+      ],
+      "id": "e4f913e7-e71a-403f-843b-10b4c512ea72",
+      "name": "HTTP Request 2"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Buscar Solicitante 2').first().json[\"ID TELEGRAM\"] }}",
+        "text": "=🎉 ¡Todas tus guardias del {{ $('Procesar Respuesta 2').first().json.diaGuardia }} quedaron cubiertas!  No necesitás hacer ninguna gestión adicional.  —— SAR — HIGA Eva Perón",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3200,
+        176
+      ],
+      "id": "f34186d3-7f5e-4143-8431-a459a039ba96",
+      "name": "Todas Cubiertas 2",
+      "webhookId": "8fee9cf4-965e-4ee1-854e-9982106645b0",
+      "credentials": {
+        "telegramApi": {
+          "id": "x4w5jFHgm3aX2t7o",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Leer Indice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Siguiente Candidato": {
+      "main": [
+        [
+          {
+            "node": "If 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Indice": {
+      "main": [
+        [
+          {
+            "node": "Siguiente Candidato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Indice": {
+      "main": [
+        [
+          {
+            "node": "Preguntar y esperar 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preguntar y esperar 2": {
+      "main": [
+        [
+          {
+            "node": "Procesar Respuesta 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If 1": {
+      "main": [
+        [
+          {
+            "node": "Guardar Indice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificar Rechazo Jefatura/Secretaria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If 2": {
+      "main": [
+        [
+          {
+            "node": "Reemplazo Registrado 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Reemplazo 2": {
+      "main": [
+        [
+          {
+            "node": "¿Quedan Fechas? 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reemplazo Registrado 2": {
+      "main": [
+        [
+          {
+            "node": "Buscar Solicitante 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Solicitante 2": {
+      "main": [
+        [
+          {
+            "node": "Ya estas cubierto 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ya estas cubierto 2": {
+      "main": [
+        [
+          {
+            "node": "Notificar Jefatura/Secretaria 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Respuesta 2": {
+      "main": [
+        [
+          {
+            "node": "If 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir Fechas Aceptadas 2": {
+      "main": [
+        [
+          {
+            "node": "Registrar Reemplazo 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Jefatura/Secretaria 2": {
+      "main": [
+        [
+          {
+            "node": "Expandir Fechas Aceptadas 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Quedan Fechas? 2": {
+      "main": [
+        [
+          {
+            "node": "Preparar Escalado 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Todas Cubiertas 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Escalado 2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request 2": {
+      "main": [
+        []
+      ]
+    },
+    "Todas Cubiertas 2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "908cc62bc798b9e4b28d1b97cb5801d43ffdc3cba96980c3bf629dd426dbf381"
+  },
+  "tags": []
+}
