@@ -1,6 +1,7 @@
 # SAR — Sistema Autónomo de Reemplazos
 
-**Automatización end-to-end en producción** para el Servicio de Salud Mental del Hospital Público HIGA Eva Perón (San Martín, Buenos Aires).
+**Automatización end-to-end en producción** para el Servicio de Salud Mental del Hospital Público HIGA Eva Perón 
+(San Martín, Buenos Aires).
 
 Reemplaza un proceso crítico que dependía de llamadas telefónicas y mensajes de WhatsApp por un sistema algorítmico disponible las 24 horas — con costo de infraestructura cero.
 
@@ -18,7 +19,7 @@ Cuando un psicólogo no puede cubrir su guardia, el proceso era:
 4. Los acuerdos quedan en chats privados, sin registro
 5. Siempre se llama a los mismos — generando conflictos de distribución
 
-**En un servicio de salud mental, una guardia sin cobertura no es un inconveniente administrativo. Es un problema asistencial.**
+**En un servicio de salud mental, una guardia sin cobertura ademas de un inconveniente administrativo, es un problema asistencial.**
 
 ---
 
@@ -61,9 +62,9 @@ Registra cada cobertura en Google Sheets + notifica a jefatura por email
 El sistema opera en dos workflows independientes comunicados por webhooks HTTP.
 
 ```
-Google Forms
-      │
-      ▼
+          Google Forms
+                │
+                ▼
 ┌─────────────────────────────────┐
 │   Workflow 1 — Flujo principal  │
 │                                 │
