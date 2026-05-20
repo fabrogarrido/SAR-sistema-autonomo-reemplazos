@@ -1,7 +1,6 @@
 # SAR — Sistema Autónomo de Reemplazos
 
-**Automatización end-to-end en producción** para el Servicio de Salud Mental del Hospital Público HIGA Eva Perón 
-(San Martín, Buenos Aires).
+**Automatización end-to-end en producción** para el Servicio de Salud Mental del Hospital Público de la Provincia de Buenos Aires.
 
 Reemplaza un proceso crítico que dependía de llamadas telefónicas y mensajes de WhatsApp por un sistema algorítmico disponible las 24 horas — con costo de infraestructura cero.
 
