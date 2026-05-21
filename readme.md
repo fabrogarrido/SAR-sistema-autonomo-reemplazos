@@ -61,9 +61,9 @@ Logs each coverage to Google Sheets + notifies management via email
 The system runs across two independent workflows communicating via HTTP webhooks.
 
 ```
-Google Forms
-      │
-      ▼
+        Google Forms
+              │
+              ▼
 ┌─────────────────────────────────┐
 │    Workflow 1 — Main flow       │
 │                                 │
@@ -75,6 +75,7 @@ Google Forms
 │  · Acceptance logging           │
 │  · Multi-channel notifications  │
 └──────────────┬──────────────────┘
+
                │ HTTP POST (rejection / partial acceptance)
                ▼
 ┌─────────────────────────────────┐
