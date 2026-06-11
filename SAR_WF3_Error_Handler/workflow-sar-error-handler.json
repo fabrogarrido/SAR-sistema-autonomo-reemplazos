@@ -1,0 +1,56 @@
+{
+  "name": "SAR - Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "f1f5081a-47c1-4ed4-ba20-911896c0f04f",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@gmail.com",
+        "subject": "=⚠️ SAR — Error en el sistema: {{ $json.workflow.name }}",
+        "message": "=Se detectó un error en el Sistema SAR.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔴 Workflow: {{ $json.workflow.name }}\n\n⚙️ Nodo: {{ $json.execution.lastNodeExecuted }}\n\n📋 Error: {{ $json.error.message || $json.error.description || 'Ver ejecución para más detalles' }}\n\n📅 Fecha y hora: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n🔗 Ejecución: {{ $json.execution.url }}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nPor favor, revisá el sistema a la brevedad.\n\n——\nSAR — Sistema de Alertas Automáticas\nHIGA Eva Perón de San Martín",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [208, 0],
+      "id": "13363572-87f2-4259-b40a-9ef62ca8c1ec",
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "tags": []
+}
