@@ -6,7 +6,11 @@ Parte del Sistema Autónomo de Reemplazos (SAR) — ver README principal
 
 ## ¿Qué hace este workflow?
 
-Maneja la escalada automática de candidatos. Se dispara por un HTTP Request desde WF1 (cuando el primer candidato rechaza o acepta parcialmente) o desde sí mismo (cuando un candidato dentro del loop también rechaza). Avanza al siguiente candidato en la lista de prioridad hasta que todas las fechas estén cubiertas o se agoten los candidatos disponibles.
+Maneja **toda la lógica de contacto de candidatos** — desde el primero hasta el último. Se dispara por un HTTP Request desde WF1 en cada nueva solicitud de reemplazo (no solo ante rechazos). Avanza por la lista de prioridad enviando un formulario interactivo de Telegram a cada candidato, hasta que todas las fechas estén cubiertas o se agoten los candidatos disponibles.
+
+WF2 es la única fuente de verdad para: contacto de candidatos, parseo de respuestas, registro de aceptaciones, notificación al solicitante y email a jefatura. En la v1, esta lógica estaba duplicada entre WF1 y WF2. En la v2, vive únicamente aquí.
+
+**Cómo funciona el índice:** WF1 resetea la pestaña Estado a `-1`. En el primer llamado, WF2 lee `-1`, incrementa a `0`, y contacta al candidato `0` (el de mayor prioridad). En cada rechazo subsiguiente, WF2 se llama a sí mismo y vuelve a incrementar.
 
 ---
 
@@ -48,8 +52,10 @@ Separar en dos workflows garantiza que cada uno tenga un único punto de entrada
 
 ### 1. Webhook
 
-- Activar el workflow en producción para obtener la URL del webhook
-- Copiar esa URL y pegarla en el nodo HTTP Request de WF1 y en el nodo HTTP Request 2 de este workflow
+- Activar este workflow primero para obtener la URL del webhook
+- Copiar esa URL y pegarla en:
+  - El nodo HTTP Request de WF1 (delegación inicial)
+  - Los nodos HTTP Request e HTTP Request 2 de este workflow (auto-loop ante rechazo)
 - Reemplazar todas las instancias de `https://TU-DOMINIO-N8N.com/webhook/sar-rejection`
 
 ### 2. Google Sheets
@@ -74,4 +80,5 @@ Separar en dos workflows garantiza que cada uno tenga un único punto de entrada
 - El nodo Next Candidate accede al body del webhook con `JSON.parse(rawBody[''])` — n8n envuelve el body en una clave vacía cuando el Content-Type es `application/json`; el código maneja ambos casos con un `try/catch`
 - El loop es autolimitante: cuando `candidateIndex >= candidates.length`, IF1 enruta al nodo de notificación a jefatura y el flujo termina limpiamente
 - El índice se incrementa antes de enviar el mensaje, por lo que el valor en la pestaña Estado siempre refleja el candidato que está siendo contactado en ese momento
-- Timeout de 6 horas en Ask and Wait 2; si el profesional no responde, esa ejecución se detiene (v2 pendiente: reintento automático con el siguiente candidato)
+- En el **primer llamado desde WF1**, la pestaña Estado contiene `-1`. `Siguiente Candidato` lo lee, incrementa a `0`, y contacta a `candidatos[0]` — el profesional de mayor prioridad
+- Timeout de 6 horas en Ask and Wait 2; si el profesional no responde, esa ejecución se detiene (pendiente: reintento automático con el siguiente candidato)

@@ -4,7 +4,11 @@
 
 ## What does this workflow do?
 
-Handles automatic candidate escalation. Triggered by an HTTP Request from WF1 (when the first candidate rejects or partially accepts) or from itself (when a candidate within the loop also rejects). It advances to the next candidate in the priority list until all dates are covered or all available candidates are exhausted.
+Handles **all candidate contact logic** — from the very first candidate to the last. Triggered by an HTTP Request from WF1 on every new replacement request (not just on rejection). It advances through the priority list, sending an interactive Telegram form to each candidate, until all dates are covered or all available candidates are exhausted.
+
+WF2 is the single source of truth for: candidate contact, response parsing, acceptance logging, requester notification, and management email. In v1, this logic was duplicated between WF1 and WF2. In v2, it lives here only.
+
+**How the index works:** WF1 resets the Status tab to `-1`. On the first call, WF2 reads `-1`, increments to `0`, and contacts candidate `0` (the highest-priority one). On each subsequent rejection, WF2 calls itself and increments by one again.
 
 ## Why a separate workflow?
 
@@ -39,8 +43,10 @@ Splitting into two workflows guarantees that each one has **a single clean entry
 ## Required configuration
 
 ### 1. Webhook
-- Activate the workflow in production to obtain the webhook URL
-- Copy that URL and paste it into the **HTTP Request** node in WF1 and the **HTTP Request 2** node in this workflow
+- Activate this workflow first to obtain the webhook URL
+- Copy that URL and paste it into:
+  - The **HTTP Request** node in WF1 (initial delegation)
+  - The **HTTP Request** and **HTTP Request 2** nodes in this workflow (self-loop on rejection)
 - Replace all instances of `https://YOUR-N8N-DOMAIN.com/webhook/sar-rejection`
 
 ### 2. Google Sheets
@@ -60,4 +66,5 @@ Splitting into two workflows guarantees that each one has **a single clean entry
 - The **Next Candidate** node accesses the webhook body with `JSON.parse(rawBody[''])` — n8n wraps the body in an empty key when Content-Type is `application/json`; the code handles both cases with a try/catch
 - The loop is self-limiting: when `candidateIndex >= candidates.length`, IF1 routes to the management notification node and the flow ends cleanly
 - The index is incremented **before** sending the message, so the value in the Status tab always reflects the candidate currently being contacted
-- 6-hour timeout on **Ask and Wait 2**; if the professional doesn't respond, that execution stops (v2 pending: automatic retry with the next candidate)
+- On the **first call from WF1**, the Status tab contains `-1`. `Next Candidate` reads it, increments to `0`, and contacts `candidates[0]` — the highest-priority professional
+- 6-hour timeout on **Ask and Wait 2**; if the professional doesn't respond, that execution stops (pending: automatic retry with the next candidate)
