@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "sar-rechazo",
+        "path": "sar-rechazo-v2",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -13,9 +13,9 @@
         0,
         0
       ],
-      "id": "886430a0-1955-4ab5-9f3d-1659fc032c6a",
+      "id": "7b5e8970-f369-45a0-be46-f7e8c990237b",
       "name": "Webhook",
-      "webhookId": "4746ee20-c172-4195-8cc2-39f2ba8491de"
+      "webhookId": "b7172b6c-3b54-4cdf-ab1f-e834ed28d7b3"
     },
     {
       "parameters": {
@@ -27,13 +27,13 @@
         416,
         0
       ],
-      "id": "3bc5feb7-8cb9-4533-b97b-80b6f4de5f8d",
+      "id": "816b2535-cd94-4d32-b77d-69e85ddc449e",
       "name": "Siguiente Candidato"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://TU-N8N-DOMINIO.com/webhook/sar-rechazo",
+        "url": "https://n8n.iteradigitalhub.com/webhook/sar-rechazo-v2",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -50,7 +50,7 @@
         1600,
         96
       ],
-      "id": "154d1843-5d50-4ce2-8da4-001d5f764bc1",
+      "id": "4defbbdd-b3fb-417b-a696-c4f1236715d3",
       "name": "HTTP Request"
     },
     {
@@ -83,14 +83,8 @@
         208,
         0
       ],
-      "id": "ef0bfe3e-4e59-43ed-bd93-8a68c425dc70",
-      "name": "Leer Indice",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "2QbdOt7ZPQPvWUtm",
-          "name": "Google Sheets account"
-        }
-      }
+      "id": "c95e49e5-1bf0-4f70-92c3-0f51e5d88ad3",
+      "name": "Leer Indice"
     },
     {
       "parameters": {
@@ -161,14 +155,8 @@
         832,
         0
       ],
-      "id": "139aea3d-0281-468d-b3c6-360f7e9155f6",
-      "name": "Guardar Indice",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "2QbdOt7ZPQPvWUtm",
-          "name": "Google Sheets account"
-        }
-      }
+      "id": "0d32802d-6e0b-4821-8a68-c8b3283121f8",
+      "name": "Guardar Indice"
     },
     {
       "parameters": {
@@ -255,18 +243,12 @@
         2880,
         -144
       ],
-      "id": "0b3afaf0-89bc-410e-8f51-1661022657c4",
-      "name": "Registrar Reemplazo 2",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "2QbdOt7ZPQPvWUtm",
-          "name": "Google Sheets account"
-        }
-      }
+      "id": "fb8a8af2-dcc8-4e79-8231-14551bf58ae5",
+      "name": "Registrar Reemplazo 2"
     },
     {
       "parameters": {
-        "sendTo": "tu-email@gmail.com",
+        "sendTo": "fabr045@gmail.com",
         "subject": "=⚠️ SAR — Sin cobertura para guardia del {{ $json.fecha }}",
         "emailType": "text",
         "message": "=Estimados,\n\nEl Sistema Autónomo de Reemplazos (SAR) informa que no fue posible encontrar cobertura para la siguiente guardia de psicología:\n\n📅 Fecha: {{ $json.fecha }}\n📆 Día: {{ $json.diaGuardia }}\n👤 Profesional ausente: {{ $json.solicitante }}\n📋 Motivo: {{ $json.motivo }}\n\nEl sistema contactó a todos los profesionales disponibles para ese día y ninguno pudo cubrir la guardia. Se requiere coordinación manual para resolver la cobertura.\n\n——\nEste mensaje fue enviado automáticamente por el SAR\nServicio de Salud Mental — HIGA Eva Perón de San Martín",
@@ -280,15 +262,9 @@
         832,
         304
       ],
-      "id": "e162a71c-5322-4614-82fe-e1eca561d728",
+      "id": "b9e6cb35-6852-418f-9e4b-c6de6292e88c",
       "name": "Notificar Rechazo Jefatura/Secretaria",
-      "webhookId": "647c8aad-14f9-4f50-a5f7-34ab640fd665",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "BXsLW2ReWOLuKJkP",
-          "name": "Gmail account"
-        }
-      }
+      "webhookId": "d6bc6d64-f4b9-430f-89d4-73c2fd853ec6"
     },
     {
       "parameters": {
@@ -300,6 +276,9 @@
         "jsonOutput": "=[\n  {\n    \"fieldLabel\": \"¿Qué fechas podés cubrir?\",\n    \"fieldType\": \"checkbox\",\n    \"fieldOptions\": {\n      \"values\": {{ $('Siguiente Candidato').first().json.guardiasPendientes.map(f => ({ option: f })) }}\n    },\n    \"requiredField\": true\n  },\n  {\n    \"fieldLabel\": \"¿Podés cubrir alguna?\",\n    \"fieldType\": \"radio\",\n    \"fieldOptions\": {\n      \"values\": [\n        { \"option\": \"Sí, las seleccionadas arriba\" },\n        { \"option\": \"No puedo cubrir ninguna\" }\n      ]\n    },\n    \"requiredField\": true\n  }\n]",
         "options": {
           "appendAttribution": false
+        },
+        "additionalFields": {
+          "appendAttribution": false
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -308,15 +287,9 @@
         1040,
         0
       ],
-      "id": "21d59b3a-071a-4186-9d14-e37e24cc03a9",
+      "id": "40ef6b95-a31d-4006-8b5c-99868d159bf8",
       "name": "Preguntar y esperar 2",
-      "webhookId": "f0118b20-af5c-4ef4-943d-f3da303f1b15",
-      "credentials": {
-        "telegramApi": {
-          "id": "x4w5jFHgm3aX2t7o",
-          "name": "Telegram account"
-        }
-      }
+      "webhookId": "a5cd14d3-b37a-49f2-b67c-4a59594f6188"
     },
     {
       "parameters": {
@@ -349,7 +322,7 @@
         624,
         160
       ],
-      "id": "6f5c0fa7-be26-4a66-958b-f9d03f87cd26",
+      "id": "9bfa4e4e-5ab3-4d0e-a686-4609cdfcf1d0",
       "name": "If 1"
     },
     {
@@ -383,7 +356,7 @@
         1392,
         0
       ],
-      "id": "f25ee809-7438-4145-a4ef-d8a35833454e",
+      "id": "91e6d2cc-1557-4ebf-a193-87df7fa00a0a",
       "name": "If 2"
     },
     {
@@ -400,15 +373,9 @@
         1696,
         -144
       ],
-      "id": "38c2a634-f34f-4103-a011-2ce940289079",
+      "id": "90013ba2-ec94-4962-8621-3b713b1f0ebf",
       "name": "Reemplazo Registrado 2",
-      "webhookId": "cd87f3d3-4ca9-41c7-9cdc-d36d3c1f0a15",
-      "credentials": {
-        "telegramApi": {
-          "id": "x4w5jFHgm3aX2t7o",
-          "name": "Telegram account"
-        }
-      }
+      "webhookId": "256493b0-9702-4f00-a505-6470f7ed24bb"
     },
     {
       "parameters": {
@@ -450,14 +417,8 @@
         1952,
         -144
       ],
-      "id": "4b391401-f677-4737-9c89-c6de682e15a8",
-      "name": "Buscar Solicitante 2",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "2QbdOt7ZPQPvWUtm",
-          "name": "Google Sheets account"
-        }
-      }
+      "id": "bf2682a5-c088-4e90-a169-dd204a4ef20a",
+      "name": "Buscar Solicitante 2"
     },
     {
       "parameters": {
@@ -473,19 +434,13 @@
         2176,
         -144
       ],
-      "id": "c09acf81-006e-4859-8449-1e5d9bb49cfc",
+      "id": "9a68b8f5-3119-45df-98c1-77096905c86f",
       "name": "Ya estas cubierto 2",
-      "webhookId": "81908777-6049-42bf-b6a0-a1d7db4e40b4",
-      "credentials": {
-        "telegramApi": {
-          "id": "x4w5jFHgm3aX2t7o",
-          "name": "Telegram account"
-        }
-      }
+      "webhookId": "9bacd670-094f-4fe7-85b3-b2bf7762e3b8"
     },
     {
       "parameters": {
-        "sendTo": "tu-email@gmail.com",
+        "sendTo": "fabr045@gmail.com",
         "subject": "=✅ SAR — Guardias cubiertas del {{ $('Procesar Respuesta 2').first().json.diaGuardia }}",
         "emailType": "text",
         "message": "=Estimados,\n\nEl Sistema SAR informa que las siguientes guardias quedaron cubiertas:\n\n📅 Fechas: {{ $('Procesar Respuesta 2').first().json.fechasAceptadas.join(', ') }}\n📆 Día: {{ $('Procesar Respuesta 2').first().json.diaGuardia }}\n👤 Profesional ausente: {{ $('Procesar Respuesta 2').first().json.solicitante }}\n✅ Cubierta por: {{ $('Procesar Respuesta 2').first().json.nombreCandidato }}\n📋 Motivo: {{ $('Procesar Respuesta 2').first().json.motivo }}\n⏳ Fechas aún pendientes: {{ $('Procesar Respuesta 2').first().json.fechasRestantes.join(', ') }}\n\n——\nEste mensaje fue enviado automáticamente por el SAR\nServicio de Salud Mental — HIGA Eva Perón de San Martín",
@@ -499,15 +454,9 @@
         2416,
         -144
       ],
-      "id": "9d53450d-b25f-4dbd-89d0-ac1f4d620248",
+      "id": "6c1bec2f-1cea-447d-94d2-ddae00f56988",
       "name": "Notificar Jefatura/Secretaria 2",
-      "webhookId": "b5fea4e1-fac4-471a-9f54-0a141ca9127b",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "BXsLW2ReWOLuKJkP",
-          "name": "Gmail account"
-        }
-      }
+      "webhookId": "fc9a9065-68c9-4e29-b324-d05246cfc0bc"
     },
     {
       "parameters": {
@@ -519,7 +468,7 @@
         1216,
         0
       ],
-      "id": "d9d671ae-679a-44a9-b77b-e65aa7065f92",
+      "id": "fe4bc4c4-7d9e-451b-b052-7a27e5a67183",
       "name": "Procesar Respuesta 2"
     },
     {
@@ -552,7 +501,7 @@
         2896,
         96
       ],
-      "id": "9b53aa4b-b026-4e51-b993-a060d43113b1",
+      "id": "f93898fc-51b6-4fe2-b618-e5e1a80ee550",
       "name": "¿Quedan Fechas? 2"
     },
     {
@@ -565,7 +514,7 @@
         2656,
         -144
       ],
-      "id": "1f95b74a-d37d-4e8b-a1c1-6e7e26a3c5a6",
+      "id": "166b9bb2-0374-405d-949a-56f405f91c6f",
       "name": "Expandir Fechas Aceptadas 2"
     },
     {
@@ -578,7 +527,7 @@
         3200,
         -48
       ],
-      "id": "e8e6143b-80c8-46a1-b99e-ec3d0f95cd30",
+      "id": "48c08218-44d6-495f-a550-f37e9ec645f6",
       "name": "Preparar Escalado 2"
     },
     {
@@ -589,13 +538,13 @@
         3424,
         176
       ],
-      "id": "e2dbb209-6fa3-43d7-9c79-d791d6df65d8",
+      "id": "cea8b005-03d5-461a-bc4a-03925498052f",
       "name": "No Operation, do nothing"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://TU-N8N-DOMINIO.com/webhook/sar-rechazo",
+        "url": "https://n8n.iteradigitalhub.com/webhook/sar-rechazo-v2",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"fecha\": \"{{ $json.fecha }}\",\n  \"diaGuardia\": \"{{ $json.diaGuardia }}\",\n  \"solicitante\": \"{{ $json.solicitante }}\",\n  \"motivo\": \"{{ $json.motivo }}\",\n  \"totalGuardias\": {{ $json.totalGuardias }},\n  \"indiceCandidato\": 0,\n  \"candidatos\": {{ $json.candidatos.toJsonString() }},\n  \"guardiasPendientes\": {{ $json.guardiasPendientes.toJsonString() }}\n}",
@@ -607,14 +556,16 @@
         3424,
         -48
       ],
-      "id": "e4f913e7-e71a-403f-843b-10b4c512ea72",
+      "id": "6e2d3b2e-42b8-4ae8-a41c-5a143968ffe4",
       "name": "HTTP Request 2"
     },
     {
       "parameters": {
         "chatId": "={{ $('Buscar Solicitante 2').first().json[\"ID TELEGRAM\"] }}",
         "text": "=🎉 ¡Todas tus guardias del {{ $('Procesar Respuesta 2').first().json.diaGuardia }} quedaron cubiertas!  No necesitás hacer ninguna gestión adicional.  —— SAR — HIGA Eva Perón",
-        "additionalFields": {}
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -622,18 +573,11 @@
         3200,
         176
       ],
-      "id": "f34186d3-7f5e-4143-8431-a459a039ba96",
+      "id": "ba9f4d69-5ad7-4e0a-ba57-d4e71231ef08",
       "name": "Todas Cubiertas 2",
-      "webhookId": "8fee9cf4-965e-4ee1-854e-9982106645b0",
-      "credentials": {
-        "telegramApi": {
-          "id": "x4w5jFHgm3aX2t7o",
-          "name": "Telegram account"
-        }
-      }
+      "webhookId": "29bdfa20-0884-4a1f-b54b-91b991268110"
     }
   ],
-  "pinData": {},
   "connections": {
     "Webhook": {
       "main": [
@@ -849,15 +793,10 @@
       ]
     }
   },
-  "active": true,
   "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "DBsntW3jNugwUrCC"
   },
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "908cc62bc798b9e4b28d1b97cb5801d43ffdc3cba96980c3bf629dd426dbf381"
-  },
-  "tags": []
+  "active": true
 }

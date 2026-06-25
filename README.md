@@ -4,7 +4,7 @@
 
 Replaces a critical process that relied on phone calls and WhatsApp messages with an algorithmic, fully autonomous system available 24/7 — at zero infrastructure cost.
 
-> **Status:** v1 in production · Infrastructure cost: $0
+> **Status:** v2 in production · Infrastructure cost: $0
 
 ---
 
@@ -65,26 +65,25 @@ The system runs across three independent workflows. Two handle the core replacem
               │
               ▼
 ┌─────────────────────────────────┐
-│    Workflow 1 — Main flow       │
+│   Workflow 1 — Setup (7 nodes)  │
 │                                 │
 │  · Date range expansion         │
 │  · Candidate filtering and      │
 │    priority ordering            │
-│  · Dynamic custom form          │
-│    with checkboxes (Telegram)   │
-│  · Acceptance logging           │
-│  · Multi-channel notifications  │
+│  · Resets candidate index to -1 │
+│  · Delegates immediately to WF2 │
 └──────────────┬──────────────────┘
                │
-               │ HTTP POST (rejection / partial acceptance)
+               │ HTTP POST (always, on every new request)
                ▼
 ┌─────────────────────────────────┐
-│   Workflow 2 — Rejection loop   │
-│                                 │
-│  · Reads current candidate      │
-│    index (Google Sheets)        │
-│  · Calculates next candidate    │
-│  · Repeats contact flow         │
+│  Workflow 2 — Full logic loop   │
+│                (21 nodes)       │
+│  · Handles ALL candidates       │
+│    (index -1+1=0 on first call) │
+│  · Dynamic form via Telegram    │
+│  · Acceptance logging           │
+│  · Multi-channel notifications  │
 │  · Calls itself via HTTP POST   │
 │    (stateless loop)             │
 └─────────────────────────────────┘
@@ -107,6 +106,23 @@ The system runs across three independent workflows. Two handle the core replacem
 n8n is stateless by design: each webhook execution is independent and shares no memory with previous runs. A single workflow with multiple entry points would execute all its nodes once per incoming connection, generating duplicate records.
 
 **The solution:** splitting the flows guarantees a single clean entry point per workflow. The current candidate index is persisted in a `Status` tab in Google Sheets, acting as an *external state store* — the same conceptual pattern as Redis or DynamoDB at larger scale, implemented at zero cost.
+
+---
+
+## Architecture — v1 vs v2
+
+In v1, WF1 handled the first candidate itself and only delegated to WF2 on rejection. This meant the entire contact/logging/notification block existed in both workflows — 13 nodes duplicated across WF1 and WF2.
+
+In v2, WF1 is pure setup: it expands dates, filters candidates, resets the index to `-1` in Google Sheets, and immediately calls WF2. WF2 now handles **all** candidates including the first — index `-1 + 1 = 0` on the first call — making it the single source of truth for all contact logic.
+
+| | WF1 nodes | Candidate 0 handled by | Duplicated logic |
+|---|---|---|---|
+| v1 | 20 | WF1 | Yes — 13 nodes repeated across both workflows |
+| v2 | 7 | WF2 | No — all candidate logic lives in WF2 only |
+
+**What changed in WF1:** removed the Telegram `sendAndWait` node, the response parser, the acceptance/rejection branch, all logging nodes, and both notification nodes. Replaced by a single HTTP POST to WF2 immediately after setup.
+
+**What changed in WF2:** no structural changes. The only behavioral change is that the Status tab now starts at `-1` instead of `0`, so the first increment lands on candidate `0` correctly.
 
 ---
 

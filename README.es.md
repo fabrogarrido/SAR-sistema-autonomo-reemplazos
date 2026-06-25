@@ -4,7 +4,7 @@
 
 Reemplaza un proceso crítico que dependía de llamadas telefónicas y mensajes de WhatsApp por un sistema algorítmico, completamente autónomo y disponible las 24 horas — con costo de infraestructura cero.
 
-> **Estado:** v1 en producción · Costo de infraestructura: $0
+> **Estado:** v2 en producción · Costo de infraestructura: $0
 
 ---
 
@@ -65,27 +65,26 @@ El sistema corre en tres workflows independientes. Dos manejan la lógica princi
               │
               ▼
 ┌─────────────────────────────────┐
-│   Workflow 1 — Flujo principal  │
+│  Workflow 1 — Setup (7 nodos)   │
 │                                 │
 │  · Expansión del rango de fechas│
 │  · Filtrado y ordenamiento de   │
 │    candidatos por prioridad     │
-│  · Formulario dinámico con      │
-│    checkboxes (Telegram)        │
-│  · Registro de aceptaciones     │
-│  · Notificaciones multicanal    │
+│  · Resetea el índice a -1       │
+│  · Delega inmediatamente a WF2  │
 └──────────────┬──────────────────┘
                │
-               │ HTTP POST (rechazo / aceptación parcial)
+               │ HTTP POST (siempre, en cada nueva solicitud)
                ▼
 ┌─────────────────────────────────┐
-│  Workflow 2 — Loop de rechazo   │
-│                                 │
-│  · Lee el índice del candidato  │
-│    actual (Google Sheets)       │
-│  · Calcula el siguiente         │
-│    candidato                    │
-│  · Repite el flujo de contacto  │
+│  Workflow 2 — Loop completo     │
+│                (21 nodos)       │
+│  · Maneja TODOS los candidatos  │
+│    (índice -1+1=0 en primer     │
+│    llamado)                     │
+│  · Formulario dinámico Telegram │
+│  · Registro de aceptaciones     │
+│  · Notificaciones multicanal    │
 │  · Se llama a sí mismo por HTTP │
 │    POST (loop stateless)        │
 └─────────────────────────────────┘
@@ -108,6 +107,23 @@ El sistema corre en tres workflows independientes. Dos manejan la lógica princi
 n8n es stateless por diseño: cada ejecución de webhook es independiente y no comparte memoria con ejecuciones anteriores. Un único workflow con múltiples puntos de entrada ejecutaría todos sus nodos una vez por cada conexión entrante, generando registros duplicados.
 
 **La solución:** separar los flujos garantiza un único punto de entrada limpio por workflow. El índice del candidato actual se persiste en una pestaña `Estado` en Google Sheets, actuando como *external state store* — el mismo patrón conceptual que Redis o DynamoDB a mayor escala, implementado a costo cero.
+
+---
+
+## Arquitectura — v1 vs v2
+
+En la v1, el WF1 manejaba al primer candidato por sí mismo y solo delegaba al WF2 ante un rechazo. Esto significaba que todo el bloque de contacto/registro/notificación existía en ambos workflows — 13 nodos duplicados entre WF1 y WF2.
+
+En la v2, el WF1 es puro setup: expande fechas, filtra candidatos, resetea el índice a `-1` en Google Sheets, y llama inmediatamente al WF2. El WF2 ahora maneja **todos** los candidatos incluyendo el primero — índice `-1 + 1 = 0` en el primer llamado — convirtiéndose en la única fuente de verdad para toda la lógica de contacto.
+
+| | Nodos WF1 | Candidato 0 manejado por | Lógica duplicada |
+|---|---|---|---|
+| v1 | 20 | WF1 | Sí — 13 nodos repetidos en ambos workflows |
+| v2 | 7 | WF2 | No — toda la lógica de candidatos vive solo en WF2 |
+
+**Qué cambió en WF1:** se eliminaron el nodo Telegram `sendAndWait`, el parser de respuestas, el branch de aceptación/rechazo, todos los nodos de registro y ambos nodos de notificación. Reemplazados por un único HTTP POST al WF2 inmediatamente después del setup.
+
+**Qué cambió en WF2:** sin cambios estructurales. El único cambio de comportamiento es que la pestaña Estado ahora arranca en `-1` en lugar de `0`, para que el primer incremento caiga correctamente en el candidato `0`.
 
 ---
 
